@@ -158,6 +158,12 @@ class ChatService:
             self.req_model = "o1-mini"
         elif "o1" in self.origin_model:
             self.req_model = "o1"
+        elif "gpt-5-4-thinking" in self.origin_model:
+            self.req_model = "gpt-5-4-thinking"
+        elif "gpt-5" in self.origin_model:
+            self.req_model = "gpt-5"
+        elif "gpt-4.5-thinking" in self.origin_model:
+            self.req_model = "gpt-4.5-thinking"
         elif "gpt-4.5o" in self.origin_model:
             self.req_model = "gpt-4.5o"
         elif "gpt-4o-canmore" in self.origin_model:
@@ -192,7 +198,7 @@ class ChatService:
 
                 self.persona = resp.get("persona")
                 if self.persona != "chatgpt-paid":
-                    if self.req_model == "gpt-4" or self.req_model == "o1-preview":
+                    if self.req_model in ["gpt-4", "o1-preview", "gpt-5", "gpt-5-4-thinking", "gpt-4.5-thinking"]:
                         logger.error(f"Model {self.resp_model} not support for {self.persona}")
                         raise HTTPException(
                             status_code=404,
