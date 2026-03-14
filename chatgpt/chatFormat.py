@@ -157,6 +157,8 @@ async def stream_response(service, response, model, max_tokens):
     }
     if system_fingerprint:
         chunk_new_data["system_fingerprint"] = system_fingerprint
+    
+    # Send empty initial delta to start the stream
     yield f"data: {json.dumps(chunk_new_data)}\n\n"
 
     async for chunk in response:
@@ -228,6 +230,14 @@ async def stream_response(service, response, model, max_tokens):
                                 else:
                                     new_text = part[len_last_content:]
                             len_last_content = len(part)
+                    elif outer_content_type == "thought":
+                        part = content.get("parts", [])[0]
+                        new_text = part[len_last_content:]
+                        len_last_content = len(part)
+                        # Return thinking content using reasoning_content field
+                        chunk_new_data["choices"][0]["delta"] = {"reasoning_content": new_text}
+                        yield f"data: {json.dumps(chunk_new_data)}\n\n"
+                        continue
                     elif outer_content_type == "multimodal_text":
                         parts = content.get("parts", [])
                         new_text = ""
@@ -268,8 +278,10 @@ async def stream_response(service, response, model, max_tokens):
                         delta = {}
                         finish_reason = "length"
                         end = True
-
+                
                 elif status == "finished_successfully":
+                    # Reset last content length when a message part finishes
+                    len_last_content = 0
                     if content.get("content_type") == "multimodal_text":
                         parts = content.get("parts", [])
                         delta = {}

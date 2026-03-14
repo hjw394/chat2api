@@ -57,7 +57,10 @@ async def num_tokens_from_messages(messages, model=''):
                     if item.get("type") == "image_url":
                         pass
             else:
-                num_tokens += len(encoding.encode(value))
+                if isinstance(value, str):
+                    num_tokens += len(encoding.encode(value))
+                else:
+                    logger.warning(f"Message value is not a string: {value}")
     num_tokens += 3
     return num_tokens
 
@@ -67,6 +70,9 @@ async def num_tokens_from_content(content, model=None):
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
         encoding = tiktoken.get_encoding("cl100k_base")
+    if not isinstance(content, str):
+        logger.warning(f"Content for token counting is not a string: {content}")
+        return 0
     encoded_content = encoding.encode(content)
     len_encoded_content = len(encoded_content)
     return len_encoded_content
@@ -77,6 +83,9 @@ async def split_tokens_from_content(content, max_tokens, model=None):
         encoding = tiktoken.encoding_for_model(model)
     except KeyError:
         encoding = tiktoken.get_encoding("cl100k_base")
+    if not isinstance(content, str):
+        logger.warning(f"Content for splitting tokens is not a string: {content}")
+        return "", 0, "stop"
     encoded_content = encoding.encode(content)
     len_encoded_content = len(encoded_content)
     if len_encoded_content >= max_tokens:

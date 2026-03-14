@@ -287,6 +287,7 @@ class ChatService:
             chat_messages, self.prompt_tokens = await api_messages_to_chat(self, self.api_messages, upload_by_url)
         except Exception as e:
             logger.error(f"Failed to format messages: {str(e)}")
+            logger.error(f"Raw request data: {json.dumps(self.data, ensure_ascii=False)}")
             raise HTTPException(status_code=400, detail="Failed to format messages.")
         self.chat_headers = self.base_headers.copy()
         self.chat_headers.update(
@@ -347,6 +348,8 @@ class ChatService:
             "variant_purpose": "comparison_implicit",
             "websocket_request_id": f"{uuid.uuid4()}",
         }
+        if self.data.get("reasoning_effort"):
+            self.chat_request["reasoning_effort"] = self.data.get("reasoning_effort")
         if self.conversation_id:
             self.chat_request['conversation_id'] = self.conversation_id
         return self.chat_request
